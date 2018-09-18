@@ -10,6 +10,10 @@ void initArr(int *numbers,int elems);
 void SortArr(int *numbers);
 
 int arr[ELEMS];
+int firstBucket[ELEMS/4];
+int secondBucket[ELEMS/4];
+int thirdBucket[ELEMS/4];
+int fourthBucket[ELEMS/4];
 
 int main()
 {
@@ -43,8 +47,9 @@ int main()
 void initArr(int *numbers,int elems)
 {
 	int i;
-	for(i=0;i<elems;i++)
+	for(i=0;i<elems;i++) {
 		numbers[i]=rand()*rand()%ELEMS;
+	}
 }
 
 int errors(int *numbers,int elems)
@@ -57,7 +62,33 @@ int errors(int *numbers,int elems)
 	return(errs);
 }
 
+/* Estrategia 1:
+ * Dividir el algoritmo en 4 partes. Cada una está encargada de ordenar
+ * números de cierto rango en un arreglo temporal. Al final sustituimos
+ * esos arreglos temporales en el arreglo original.
+ */
+
+ /* Estrategia 2:
+ * Dividir el arreglo en 4 partes. Ordenar esas 4 partes.
+ * Posteriormente ordenar los 4 arreglos.
+ */
+
 void SortArr(int *numbers)
 {
-	// Aquí va tu función para ordenar los números en paralelo
+	int fb = 0;
+	int sb = 0;
+	int tb = 0;
+	int fob = 0;
+	for(int i = 0; i<ELEMS; i++) {
+		if(numbers[i]<(ELEMS/2)*-1) {
+			firstBucket[fb] = numbers[i];
+		} else if (numbers[i]<0) {
+			secondBucket[sb] = numbers[i];
+		} else if (numbers[i]<ELEMS/2) {
+			thirdBucket[tb] = numbers[i];
+		} else {
+			fourthBucket[fob] = numbers[i];
+		}
+	}
+	
 }
