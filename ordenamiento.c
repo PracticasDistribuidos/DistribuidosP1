@@ -8,12 +8,14 @@
 int errors(int *numbers,int elems);
 void initArr(int *numbers,int elems);
 void SortArr(int *numbers);
+int cmpfunc (const void * a, const void * b);
+void makeNewArray(int* source, int* target, int start, int end);
 
 int arr[ELEMS];
-int firstBucket[ELEMS/4];
-int secondBucket[ELEMS/4];
-int thirdBucket[ELEMS/4];
-int fourthBucket[ELEMS/4];
+int firstBucket[ELEMS/4+100];
+int secondBucket[ELEMS/4+100];
+int thirdBucket[ELEMS/4+100];
+int fourthBucket[ELEMS/4+100];
 
 int main()
 {
@@ -82,13 +84,48 @@ void SortArr(int *numbers)
 	for(int i = 0; i<ELEMS; i++) {
 		if(numbers[i]<(ELEMS/2)*-1) {
 			firstBucket[fb] = numbers[i];
+			fb++;
 		} else if (numbers[i]<0) {
 			secondBucket[sb] = numbers[i];
+			sb++;
 		} else if (numbers[i]<ELEMS/2) {
 			thirdBucket[tb] = numbers[i];
+			tb++;
 		} else {
 			fourthBucket[fob] = numbers[i];
+			fob++;
 		}
 	}
-	
+
+	#pragma omp parallel num_threads(4)
+	{
+		switch(omp_get_thread_num()) {
+			case(0):
+				qsort(firstBucket, ELEMS/4, sizeof(int), cmpfunc);
+				makeNewArray(firstBucket,numbers,0,fb);
+				break;
+			case(1):
+				qsort(secondBucket, ELEMS/4, sizeof(int), cmpfunc);
+				makeNewArray(secondBucket,numbers,fb,fb+sb);
+				break;
+			case(2):
+				qsort(thirdBucket, ELEMS/4, sizeof(int), cmpfunc);
+				makeNewArray(secondBucket,numbers,fb+sb,fb+sb+tb);
+				break;
+			case(3):
+				qsort(fourthBucket, ELEMS/4, sizeof(int), cmpfunc);
+				makeNewArray(secondBucket,numbers,fb+sb+tb,fb+sb+tb+fob);
+				break;
+		}
+	}
+}
+
+void makeNewArray(int* source, int* target, int start, int end){
+	for (int i = start; i<end;i++){
+		target[i] = source[i-start];
+	}
+}
+
+int cmpfunc (const void * a, const void * b) {
+   return ( *(int*)a - *(int*)b );
 }
