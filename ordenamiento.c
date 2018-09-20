@@ -1,3 +1,9 @@
+/*
+ * Equipo: 
+ * Gabriel Campollo
+ * Carlos Gonzales
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,6 +16,7 @@ void initArr(int *numbers,int elems);
 void SortArr(int *numbers);
 int cmpfunc (const void * a, const void * b);
 void makeNewArray(int* source, int* target, int start, int end);
+int sortToBucket(int *bucket,int* arr,int lowerBound,int upperBound);
 
 int arr[ELEMS];
 int firstBucket[ELEMS/2];
@@ -43,7 +50,7 @@ int main()
 
 	if((n=errors(arr,ELEMS)))
 		printf("Se encontraron %d errores\n",n);
-	else
+	else 
 		printf("%d elementos ordenados en %1.2f segundos\n",ELEMS,elapsed_time);
 }
 
@@ -62,9 +69,9 @@ int errors(int *numbers,int elems)
 	for(i=0;i<elems-1;i++)
 		if(numbers[i]>numbers[i+1]) {
 			errs++;
-			printf("Error encontrado en la posición %d\n",i);
-			printf("Valor de number[i] = %d\n",numbers[i]);
-			printf("Valor de number[i+1] = %d\n",numbers[i+1]);
+			// printf("Error encontrado en la posición %d\n",i);
+			// printf("Valor de number[i] = %d\n",numbers[i]);
+			// printf("Valor de number[i+1] = %d\n",numbers[i+1]);
 		}
 	return(errs);
 }
@@ -78,26 +85,35 @@ int errors(int *numbers,int elems)
 
 void SortArr(int *numbers)
 {
-	int fb = 0;
-	int sb = 0;
-	int tb = 0;
-	int fob = 0;
-	for(int i = 0; i<ELEMS; i++) {
-		if(numbers[i]<(ELEMS/2)*-1) {
-			firstBucket[fb] = numbers[i];
-			fb++;
-		} else if (numbers[i]<0) {
-			secondBucket[sb] = numbers[i];
-			sb++;
-		} else if (numbers[i]<ELEMS/2) {
-			thirdBucket[tb] = numbers[i];
-			tb++;
-		} else {
-			fourthBucket[fob] = numbers[i];
-			fob++;
+	int fb;
+	int sb;
+	int tb;
+	int fob;
+
+	/**
+	 * Sort into buckets.
+	 */
+	#pragma omp parallel num_threads(4)
+	{
+		switch(omp_get_thread_num()) {
+			case(0):
+				fb = sortToBucket(firstBucket,numbers,(ELEMS*-1)-1,(ELEMS/2)*-1);
+				break;
+			case(1):
+				sb = sortToBucket(secondBucket,numbers,(ELEMS/2)*-1,0);
+				break;
+			case(2):
+				tb = sortToBucket(thirdBucket,numbers,0,ELEMS/2);
+				break;
+			case(3):
+				fob = sortToBucket(fourthBucket,numbers,ELEMS/2,ELEMS+1);
+				break;
 		}
 	}
 
+	/**
+	 * Order Buckets
+	 */
 	#pragma omp parallel num_threads(4)
 	{
 		switch(omp_get_thread_num()) {
@@ -119,6 +135,17 @@ void SortArr(int *numbers)
 				break;
 		}
 	}
+}
+
+int sortToBucket(int *bucket,int* arr,int lowerBound,int upperBound){
+	int bucketIndex = 0;
+	for(int i = 0; i<ELEMS ; i++) {
+		if(i<upperBound && i>=lowerBound) {
+			bucket[bucketIndex] = arr[i];
+			bucketIndex++;
+		}
+	}
+	return bucketIndex;
 }
 
 void makeNewArray(int* source, int* target, int start, int end){
