@@ -39,12 +39,35 @@ int main()
 	stop_ts = ts.tv_sec * 1000000 + ts.tv_usec; // Tiempo final
 
 	elapsed_time = (float) (stop_ts - start_ts)/1000000.0;
+	
+	printf("Para la version paralela:");
+
+	if((n=errors(arr,ELEMS)))
+		printf("Se encontraron %d errores\n",n);
+	else
+		printf("%d elementos ordenados en %1.2f segundos\n",ELEMS,elapsed_time);
+
+	printf("Para la version serial:");
+
+	initArr(arr,ELEMS);
+
+	gettimeofday(&ts, NULL);
+	start_ts = ts.tv_sec * 1000000 + ts.tv_usec; // Tiempo inicial
+
+	//				qsort(firstBucket, fb, sizeof(int), cmpfunc);	
+	qsort(arr, ELEMS, sizeof(int), cmpfunc);
+
+	gettimeofday(&ts, NULL);
+	stop_ts = ts.tv_sec * 1000000 + ts.tv_usec; // Tiempo final
+
+	elapsed_time = (float) (stop_ts - start_ts)/1000000.0;
 
 
 	if((n=errors(arr,ELEMS)))
 		printf("Se encontraron %d errores\n",n);
 	else
 		printf("%d elementos ordenados en %1.2f segundos\n",ELEMS,elapsed_time);
+
 }
 
 void initArr(int *numbers,int elems)

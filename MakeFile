@@ -1,0 +1,2 @@
+ordenamiento: ordenamiento.c
+	gcc -fopenmp ordenamiento.c -o o
